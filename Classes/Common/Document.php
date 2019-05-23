@@ -64,6 +64,15 @@ final class Document {
     public static $extKey = 'dlf';
 
     /**
+     * This holds the file ID -> file format concordance
+     * @see getFileFormat
+     *
+     * @var array
+     * @access protected
+     */
+    protected $fileFormats = [];
+
+    /**
      * This holds the file ID -> USE concordance
      * @see _getFileGrps()
      *
@@ -220,6 +229,7 @@ final class Document {
 
     /**
      * This holds the documents' raw text pages with their corresponding structMap//div's ID as array key
+     * @see getRawText()
      *
      * @var array
      * @access protected
@@ -352,6 +362,52 @@ final class Document {
     public static function clearRegistry() {
         // Reset registry array.
         self::$registry = [];
+    }
+
+    /**
+     * This gets the XML format of a file representing a physical page
+     *
+     * @access public
+     *
+     * @param string $id: The @ID attribute of the file node
+     *
+     * @return string The file's XML format
+     */
+    public function getFileFormat($id) {
+        if (!empty($this->fileFormats[$id])) {
+            return $this->fileFormats[$id];
+        }
+        if (!empty($id)
+            && ($location = $this->getFileLocation($id))) {
+            // Turn off libxml's error logging.
+            $libxmlErrors = libxml_use_internal_errors(TRUE);
+            // Disables the functionality to allow external entities to be loaded when parsing the XML, must be kept.
+            $previousValueOfEntityLoader = libxml_disable_entity_loader(TRUE);
+            // Load XML from file.
+            $rawTextXml = simplexml_load_string(\TYPO3\CMS\Core\Utility\GeneralUtility::getUrl($location));
+            // Reset entity loader setting.
+            libxml_disable_entity_loader($previousValueOfEntityLoader);
+            // Reset libxml's error logging.
+            libxml_use_internal_errors($libxmlErrors);
+            // Check if file is XML.
+            if ($rawTextXml !== FALSE) {
+                // Get the root element's name.
+                $rootElement = $rawTextXml->getName();
+                // Get respective text format type.
+                $this->loadFormats();
+                foreach ($this->formats as $type => $details) {
+                    if ($details['rootElement'] == $rootElement) {
+                        return $this->fileFormats[$id] = $type;
+                    }
+                }
+                Helper::devLog('Unknown file format "'.$rootElement.'" for file with @ID "'.$id.'"', DEVLOG_SEVERITY_WARNING);
+            } else {
+                Helper::devLog('Format detection is supported for XML files only (tried file with @ID "'.$id.'")', DEVLOG_SEVERITY_NOTICE);
+            }
+        } else {
+            Helper::devLog('There is no file node with @ID "'.$id.'"', DEVLOG_SEVERITY_WARNING);
+        }
+        return '';
     }
 
     /**
@@ -802,20 +858,8 @@ final class Document {
             // ... and extension configuration.
             $extConf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf'][self::$extKey]);
             if (!empty($this->physicalStructureInfo[$id])) {
-                // Get fulltext file.
-                $file = $this->getFileLocation($this->physicalStructureInfo[$id]['files'][$extConf['fileGrpFulltext']]);
-                // Turn off libxml's error logging.
-                $libxmlErrors = libxml_use_internal_errors(TRUE);
-                // Disables the functionality to allow external entities to be loaded when parsing the XML, must be kept.
-                $previousValueOfEntityLoader = libxml_disable_entity_loader(TRUE);
-                // Load XML from file.
-                $rawTextXml = simplexml_load_string(\TYPO3\CMS\Core\Utility\GeneralUtility::getUrl($file));
-                // Reset entity loader setting.
-                libxml_disable_entity_loader($previousValueOfEntityLoader);
-                // Reset libxml's error logging.
-                libxml_use_internal_errors($libxmlErrors);
-                // Get the root element's name as text format.
-                $textFormat = strtoupper($rawTextXml->getName());
+                // Get fulltext file format.
+                $textFormat = $this->getFileFormat($this->physicalStructureInfo[$id]['files'][$extConf['fileGrpFulltext']]);
             } else {
                 Helper::devLog('Invalid structure node @ID "'.$id.'"', DEVLOG_SEVERITY_WARNING);
                 return $rawText;
@@ -827,6 +871,17 @@ final class Document {
                     // Get the raw text from class.
                     if (class_exists($class)
                         && ($obj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance($class)) instanceof FulltextInterface) {
+                        $file = $this->getFileLocation($this->physicalStructureInfo[$id]['files'][$extConf['fileGrpFulltext']]);
+                        // Turn off libxml's error logging.
+                        $libxmlErrors = libxml_use_internal_errors(TRUE);
+                        // Disables the functionality to allow external entities to be loaded when parsing the XML, must be kept.
+                        $previousValueOfEntityLoader = libxml_disable_entity_loader(TRUE);
+                        // Load XML from file.
+                        $rawTextXml = simplexml_load_string(\TYPO3\CMS\Core\Utility\GeneralUtility::getUrl($file));
+                        // Reset entity loader setting.
+                        libxml_disable_entity_loader($previousValueOfEntityLoader);
+                        // Reset libxml's error logging.
+                        libxml_use_internal_errors($libxmlErrors);
                         $rawText = $obj->getRawText($rawTextXml);
                         $this->rawTextArray[$id] = $rawText;
                     } else {

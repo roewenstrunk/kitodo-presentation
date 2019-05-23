@@ -31,7 +31,7 @@ jQuery.fn.scrollTo = function(elem, speed) {
  * @param {Object} image
  * @param {string} fulltextUrl
  */
-var dlfViewerFullTextControl = function(map, image, fulltextUrl) {
+var dlfViewerAltoFullTextControl = function(map, image, fulltextUrl) {
 
     /**
      * @private
@@ -273,14 +273,14 @@ var dlfViewerFullTextControl = function(map, image, fulltextUrl) {
 /**
  * Activate Fulltext Features
  */
-dlfViewerFullTextControl.prototype.activate = function() {
+dlfViewerAltoFullTextControl.prototype.activate = function() {
 
     var controlEl = $('#tx-dlf-tools-fulltext');
 
     // if the activate method is called for the first time fetch
     // fulltext data from server
     if (this.fulltextData_ === undefined)  {
-        this.fulltextData_ = dlfViewerFullTextControl.fetchFulltextDataFromServer(this.url, this.image);
+        this.fulltextData_ = dlfViewerAltoFullTextControl.fetchFulltextDataFromServer(this.url, this.image);
 
         if (this.fulltextData_ !== undefined) {
             // add features to fulltext layer
@@ -308,7 +308,7 @@ dlfViewerFullTextControl.prototype.activate = function() {
 /**
  * Activate Fulltext Features
  */
-dlfViewerFullTextControl.prototype.deactivate = function() {
+dlfViewerAltoFullTextControl.prototype.deactivate = function() {
 
     var controlEl = $('#tx-dlf-tools-fulltext');
 
@@ -326,7 +326,7 @@ dlfViewerFullTextControl.prototype.deactivate = function() {
  *
  * @return void
  */
-dlfViewerFullTextControl.prototype.disableFulltextSelect = function() {
+dlfViewerAltoFullTextControl.prototype.disableFulltextSelect = function() {
 
     // register event listeners
     this.map.un('click', this.handlers_.mapClick);
@@ -355,7 +355,7 @@ dlfViewerFullTextControl.prototype.disableFulltextSelect = function() {
  * @param {Array.<ol.Feature>} textBlockFeatures
  * @þaram {Array.<ol.Feature>} textLineFeatures
  */
-dlfViewerFullTextControl.prototype.enableFulltextSelect = function(textBlockFeatures, textLineFeatures) {
+dlfViewerAltoFullTextControl.prototype.enableFulltextSelect = function(textBlockFeatures, textLineFeatures) {
 
     // register event listeners
     this.map.on('click', this.handlers_.mapClick);
@@ -387,7 +387,7 @@ dlfViewerFullTextControl.prototype.enableFulltextSelect = function(textBlockFeat
  * @return {ol.Feature|undefined}
  * @static
  */
-dlfViewerFullTextControl.fetchFulltextDataFromServer = function(url, image, opt_offset){
+dlfViewerAltoFullTextControl.fetchFulltextDataFromServer = function(url, image, opt_offset){
     // fetch data from server
     var request = $.ajax({
         url: url,
@@ -412,7 +412,7 @@ dlfViewerFullTextControl.fetchFulltextDataFromServer = function(url, image, opt_
  *
  * @param {Array.<ol.Feature>|undefined} features
  */
-dlfViewerFullTextControl.prototype.showFulltext = function(features) {
+dlfViewerAltoFullTextControl.prototype.showFulltext = function(features) {
 
     if (features !== undefined) {
         $('#tx-dlf-fulltextselection').children().remove();

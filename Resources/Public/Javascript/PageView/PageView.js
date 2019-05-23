@@ -12,6 +12,7 @@
  * @TODO Trigger resize map event after fullscreen is toggled
  * @param {Object} settings
  *      {string=} div
+ *      {Number} page
  *      {Array.<?>} images
  *      {Array.<?>} fulltexts
  *      {Array.<?>} controls
@@ -32,6 +33,13 @@ var dlfViewer = function(settings){
      * @private
      */
     this.map = null;
+
+    /**
+     * Conteins the current page number
+     * @type {Number}
+     * @private
+     */
+    this.page = dlfUtils.exists(settings.page) ? settings.page : 1;
 
     /**
      * Contains image information (e.g. URL, width, height)
@@ -150,7 +158,16 @@ dlfViewer.prototype.addCustomControls = function(controlNames) {
     // Adds fulltext behavior only if there is fulltext available and no double page
     // behavior is active
     if (this.fulltexts[0] !== undefined && this.fulltexts[0].url !== '' && this.images.length == 1) {
-        fulltextControl = new dlfViewerFullTextControl(this.map, this.images[0], this.fulltexts[0].url);
+        switch (this.fulltexts[0].format) {
+            case 'ALTO':
+                fulltextControl = new dlfViewerAltoFullTextControl(this.map, this.images[0], this.fulltexts[0].url);
+                break;
+            case 'TEI':
+                fulltextControl = new dlfViewerTeiFullTextControl(this.map, this.page);
+                break;
+            default:
+                $('#tx-dlf-tools-fulltext').remove();
+        }
     } else {
         $('#tx-dlf-tools-fulltext').remove();
     }
@@ -160,7 +177,7 @@ dlfViewer.prototype.addCustomControls = function(controlNames) {
     // Add image manipulation tool if container is added.
     //
     // It is important to know that the image manipulation tool uses a webgl renderer as basis. Therefor the
-    // application has as first to check if the renderer is active. Further it has to check if cors supported through
+    // application has at first to check if the renderer is active. Further it has to check if CORS supported through
     // image.
     //
     if ($('#tx-dlf-tools-imagetools').length > 0 && dlfUtils.isWebGLEnabled() && this.isCorsEnabled) {
@@ -302,17 +319,17 @@ dlfViewer.prototype.displayHighlightWord = function() {
     var key = 'tx_dlf[highlight_word]',
         urlParams = dlfUtils.getUrlParams();
 
-    if (urlParams != undefined && urlParams.hasOwnProperty(key) && this.fulltexts[0] !== undefined && this.fulltexts[0].url !== '' && this.images.length > 0) {
+    if (urlParams != undefined && urlParams.hasOwnProperty(key) && this.fulltexts[0] !== undefined && this.fulltexts[0].url !== '' && this.images.length > 0 && this.fulltexts[0].format === 'ALTO') {
         var value = urlParams[key],
             values = value.split(';'),
-            fulltextData = dlfViewerFullTextControl.fetchFulltextDataFromServer(this.fulltexts[0].url, this.images[0]),
+            fulltextData = dlfViewerAltoFullTextControl.fetchFulltextDataFromServer(this.fulltexts[0].url, this.images[0]),
             fulltextDataImageTwo = undefined;
 
         // check if there is another image / fulltext to look for
         if (this.images.length == 2 & this.fulltexts[1] !== undefined && this.fulltexts[1].url !== '') {
             var image = $.extend({}, this.images[1]);
             image.width = image.width + this.images[0].width;
-            fulltextDataImageTwo = dlfViewerFullTextControl.fetchFulltextDataFromServer(this.fulltexts[1].url, this.images[1], this.images[0].width);
+            fulltextDataImageTwo = dlfViewerAltoFullTextControl.fetchFulltextDataFromServer(this.fulltexts[1].url, this.images[1], this.images[0].width);
         }
 
         var stringFeatures = fulltextDataImageTwo === undefined ? fulltextData.getStringFeatures() :

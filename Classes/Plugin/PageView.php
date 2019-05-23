@@ -67,8 +67,8 @@ class PageView extends \Kitodo\Dlf\Common\AbstractPlugin {
         $output[] = '<script type="text/javascript" src="'.\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::siteRelPath($this->extKey).'Resources/Public/Javascript/PageView/OL3Styles.js"></script>';
         $output[] = '<script type="text/javascript" src="'.\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::siteRelPath($this->extKey).'Resources/Public/Javascript/PageView/OL3Sources.js"></script>';
         $output[] = '<script type="text/javascript" src="'.\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::siteRelPath($this->extKey).'Resources/Public/Javascript/PageView/AltoParser.js"></script>';
+        $output[] = '<script type="text/javascript" src="'.\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::siteRelPath($this->extKey).'Resources/Public/Javascript/PageView/AltoFulltextControl.js"></script>';
         $output[] = '<script type="text/javascript" src="'.\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::siteRelPath($this->extKey).'Resources/Public/Javascript/PageView/ImageManipulationControl.js"></script>';
-        $output[] = '<script type="text/javascript" src="'.\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::siteRelPath($this->extKey).'Resources/Public/Javascript/PageView/FulltextControl.js"></script>';
         $output[] = '<script type="text/javascript" src="'.\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::siteRelPath($this->extKey).'Resources/Public/Javascript/PageView/PageView.js"></script>';
         // Add viewer configuration.
         $output[] = '
@@ -78,6 +78,7 @@ class PageView extends \Kitodo\Dlf\Common\AbstractPlugin {
                         tx_dlf_viewer = new dlfViewer({
                             controls: ["'.implode('", "', $this->controls).'"],
                             div: "'.$this->conf['elementId'].'",
+                            page: '.$this->piVars['page'].',
                             images: '.json_encode($this->images).',
                             fulltexts: '.json_encode($this->fulltexts).',
                             useInternalProxy: '.($this->conf['useInternalProxy'] ? 1 : 0).'
@@ -213,6 +214,7 @@ class PageView extends \Kitodo\Dlf\Common\AbstractPlugin {
             ];
             $fulltext['url'] = $this->cObj->typoLink_URL($linkConf);
             $fulltext['mimetype'] = $this->doc->getFileMimeType($this->doc->physicalStructureInfo[$this->doc->physicalStructure[$page]]['files'][$this->conf['fileGrpFulltext']]);
+            $fulltext['format'] = $this->doc->getFileFormat($this->doc->physicalStructureInfo[$this->doc->physicalStructure[$page]]['files'][$this->conf['fileGrpFulltext']]);
         } else {
             Helper::devLog('File not found in fileGrp "'.$this->conf['fileGrpFulltext'].'"', DEVLOG_SEVERITY_WARNING);
         }
