@@ -270,7 +270,7 @@ class PageView extends \Kitodo\Dlf\Common\AbstractPlugin
     {
         $image = [];
         // Get @USE value of METS fileGrp.
-        $fileGrps = GeneralUtility::trimExplode(',', $this->conf['fileGrps']);
+        $fileGrps = GeneralUtility::trimExplode(',', $this->conf['fileGrpImages']);
         while ($fileGrp = @array_pop($fileGrps)) {
             // Get image link.
             if (!empty($this->doc->physicalStructureInfo[$this->doc->physicalStructure[$page]]['files'][$fileGrp])) {
@@ -310,20 +310,25 @@ class PageView extends \Kitodo\Dlf\Common\AbstractPlugin
     {
         $fulltext = [];
         // Get fulltext link.
-        if (!empty($this->doc->physicalStructureInfo[$this->doc->physicalStructure[$page]]['files'][$this->conf['fileGrpFulltext']])) {
-            $fulltext['url'] = $this->doc->getFileLocation($this->doc->physicalStructureInfo[$this->doc->physicalStructure[$page]]['files'][$this->conf['fileGrpFulltext']]);
-            if ($this->conf['useInternalProxy']) {
-                // Configure @action URL for form.
-                $linkConf = [
-                    'parameter' => $GLOBALS['TSFE']->id,
-                    'forceAbsoluteUrl' => !empty($this->conf['forceAbsoluteUrl']) ? 1 : 0,
-                    'forceAbsoluteUrl.' => ['scheme' => !empty($this->conf['forceAbsoluteUrl']) && !empty($this->conf['forceAbsoluteUrlHttps']) ? 'https' : 'http'],
-                    'additionalParams' => '&eID=tx_dlf_pageview_proxy&url=' . urlencode($fulltext['url']),
-                ];
-                $fulltext['url'] = $this->cObj->typoLink_URL($linkConf);
+        $fileGrpFulltexts = GeneralUtility::trimExplode(',', $this->conf['fileGrpFulltext']);
+        while ($fileGrpFulltext = array_shift($fileGrpFulltexts)) {
+            if (!empty($this->doc->physicalStructureInfo[$this->doc->physicalStructure[$page]]['files'][$fileGrpFulltext])) {
+                $fulltext['url'] = $this->doc->getFileLocation($this->doc->physicalStructureInfo[$this->doc->physicalStructure[$page]]['files'][$fileGrpFulltext]);
+                if ($this->conf['useInternalProxy']) {
+                    // Configure @action URL for form.
+                    $linkConf = [
+                        'parameter' => $GLOBALS['TSFE']->id,
+                        'forceAbsoluteUrl' => !empty($this->conf['forceAbsoluteUrl']) ? 1 : 0,
+                        'forceAbsoluteUrl.' => ['scheme' => !empty($this->conf['forceAbsoluteUrl']) && !empty($this->conf['forceAbsoluteUrlHttps']) ? 'https' : 'http'],
+                        'additionalParams' => '&eID=tx_dlf_pageview_proxy&url=' . urlencode($fulltext['url']),
+                    ];
+                    $fulltext['url'] = $this->cObj->typoLink_URL($linkConf);
+                }
+                $fulltext['mimetype'] = $this->doc->getFileMimeType($this->doc->physicalStructureInfo[$this->doc->physicalStructure[$page]]['files'][$fileGrpFulltext]);
+                break;
             }
-            $fulltext['mimetype'] = $this->doc->getFileMimeType($this->doc->physicalStructureInfo[$this->doc->physicalStructure[$page]]['files'][$this->conf['fileGrpFulltext']]);
-        } else {
+        }
+        if (empty($fulltext)) {
             Helper::devLog('File not found in fileGrp "' . $this->conf['fileGrpFulltext'] . '"', DEVLOG_SEVERITY_WARNING);
         }
         return $fulltext;
