@@ -270,12 +270,12 @@ class PageView extends \Kitodo\Dlf\Common\AbstractPlugin
     {
         $image = [];
         // Get @USE value of METS fileGrp.
-        $fileGrps = GeneralUtility::trimExplode(',', $this->conf['fileGrpImages']);
-        while ($fileGrp = @array_pop($fileGrps)) {
+        $fileGrpsImages = GeneralUtility::trimExplode(',', $this->conf['fileGrpImages']);
+        while ($fileGrpImages = array_pop($fileGrpsImages)) {
             // Get image link.
-            if (!empty($this->doc->physicalStructureInfo[$this->doc->physicalStructure[$page]]['files'][$fileGrp])) {
-                $image['url'] = $this->doc->getFileLocation($this->doc->physicalStructureInfo[$this->doc->physicalStructure[$page]]['files'][$fileGrp]);
-                $image['mimetype'] = $this->doc->getFileMimeType($this->doc->physicalStructureInfo[$this->doc->physicalStructure[$page]]['files'][$fileGrp]);
+            if (!empty($this->doc->physicalStructureInfo[$this->doc->physicalStructure[$page]]['files'][$fileGrpImages])) {
+                $image['url'] = $this->doc->getFileLocation($this->doc->physicalStructureInfo[$this->doc->physicalStructure[$page]]['files'][$fileGrpImages]);
+                $image['mimetype'] = $this->doc->getFileMimeType($this->doc->physicalStructureInfo[$this->doc->physicalStructure[$page]]['files'][$fileGrpImages]);
                 if (
                     $this->conf['useInternalProxy']
                     && !in_array($image['mimetype'], $this->customMimetypes)
@@ -291,7 +291,7 @@ class PageView extends \Kitodo\Dlf\Common\AbstractPlugin
                 }
                 break;
             } else {
-                Helper::devLog('File not found in fileGrp "' . $fileGrp . '"', DEVLOG_SEVERITY_WARNING);
+                Helper::devLog('File not found in fileGrp "' . $fileGrpImages . '"', DEVLOG_SEVERITY_WARNING);
             }
         }
         return $image;
@@ -310,8 +310,8 @@ class PageView extends \Kitodo\Dlf\Common\AbstractPlugin
     {
         $fulltext = [];
         // Get fulltext link.
-        $fileGrpFulltexts = GeneralUtility::trimExplode(',', $this->conf['fileGrpFulltext']);
-        while ($fileGrpFulltext = array_shift($fileGrpFulltexts)) {
+        $fileGrpsFulltext = GeneralUtility::trimExplode(',', $this->conf['fileGrpFulltext']);
+        while ($fileGrpFulltext = array_shift($fileGrpsFulltext)) {
             if (!empty($this->doc->physicalStructureInfo[$this->doc->physicalStructure[$page]]['files'][$fileGrpFulltext])) {
                 $fulltext['url'] = $this->doc->getFileLocation($this->doc->physicalStructureInfo[$this->doc->physicalStructure[$page]]['files'][$fileGrpFulltext]);
                 if ($this->conf['useInternalProxy']) {
