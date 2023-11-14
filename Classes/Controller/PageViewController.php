@@ -93,7 +93,7 @@ class PageViewController extends AbstractController
             // Quit without doing anything if required variables are not set.
             return '';
         } else {
-            if ($this->document->getDoc()->tableOfContents[0]['type'] == 'multivolume_work' && empty($this->requestData['multiview'])) { // @TODO: Change type
+            if (isset($this->settings['multiViewType']) && $this->document->getDoc()->tableOfContents[0]['type'] === $this->settings['multiViewType'] && empty($this->requestData['multiview'])) {
                 $params = array_merge(
                     ['tx_dlf' => $this->requestData],
                     ['tx_dlf[multiview]' => 1]
@@ -392,8 +392,7 @@ class PageViewController extends AbstractController
      */
     protected function addViewerJS()
     {
-        if (count($this->documentArray) > 1 ||
-            $this->document->getDoc()->tableOfContents[0]['type'] == 'multivolume_work') { // @todo Change type
+        if (count($this->documentArray) > 1) {
             $jsViewer = 'tx_dlf_viewer = [];';
             $i = 0;
             $globalPage = $this->requestData['page'];
@@ -447,6 +446,13 @@ class PageViewController extends AbstractController
                     }
                 });';
         } else {
+            $currentMeasureId = '';
+            if ($this->requestData['measure']) {
+                $docPage = $this->requestData['page'];
+                $docMeasures = $this->getMeasures($docPage);
+                $currentMeasureId = $docMeasures['measureCounterToMeasureId'][$this->requestData['measure']];
+            }
+
             // Viewer configuration.
             $viewerConfiguration = '$(document).ready(function() {
                     if (dlfUtils.exists(dlfViewer)) {
@@ -460,7 +466,8 @@ class PageViewController extends AbstractController
                             annotationContainers: ' . json_encode($this->annotationContainers) . ',
                             measureCoords: ' . json_encode($this->measures) . ',
                             useInternalProxy: ' . ($this->settings['useInternalProxy'] ? 1 : 0) . ',
-                            verovioAnnotations: ' . json_encode($this->verovioAnnotations) . '
+                            verovioAnnotations: ' . json_encode($this->verovioAnnotations) . ',
+                            currentMeasureId: "' . $currentMeasureId . '"
                         });
                     }
                 });';
